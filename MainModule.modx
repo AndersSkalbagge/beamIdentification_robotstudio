@@ -1,0 +1,615 @@
+MODULE MainModule
+
+
+
+    ! Work objects
+    
+    !PERS wobjdata wBaseHE := [FALSE,TRUE,"",[[-1207.76,550.955,0.747735],[0.972334,0.000208301,0.00371528,0.233565]],[[0,0,0],[1,0,0,0]]];
+     PERS wobjdata wBaseHE := [FALSE,TRUE,"",[[-1207.76,550.955,0.747735],[0.972334,0.000208301,0.00371528,0.233565]],[[0,0,0],[1,0,0,0]]];
+
+   
+    ! Tools
+    PERS tooldata tLongLaser:=[TRUE,[[16.955,-15.3464,198.124],[0.999996,-0.00158869,-0.00247474,-0.000003984]],[2,[0,0,1],[1,0,0,0],0,0,0]];
+    PERS tooldata tMidLaser:=[TRUE,[[16.6097,1.06014,197.001],[0.999992,-0.00340634,-0.00216207,0.00000732]],[2,[0,0,1],[1,0,0,0],0,0,0]];
+    PERS tooldata tShortLaser:=[TRUE,[[16.1183,16.0556,196.293],[0.99989,0.0117476,-0.00903161,-0.000106109]],[2,[1,0,0],[1,0,0,0],0,0,0]];
+
+    ! Robtargets
+        !! General 
+        CONST robtarget tStartPos:=[[1244.445303425,-574.74416709,1538.34820027],[0.009834138,-0.004432772,0.694727687,0.719191964],[0,-2,2,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    
+        !! Upper beam
+            !!! Point sweeps
+            CONST robtarget tAbovePointRightUpper:=[[1087.117970414,281.173045823,1563.99539577],[0.000000084,-0.000000032,0.707106756,0.707106807],[1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            CONST robtarget tAbovePointLeftUpper:=[[541.809089604,281.172705576,1563.995554747],[0.000000034,-0.000000024,0.707106748,0.707106814],[1,-1,1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    
+            !!! Vertical sweeps
+            CONST robtarget tUpperVerticalSweepDown:=[[1087.14,281.167,1561.33],[-1.26E-7,-9E-9,0.707107,0.707107],[1,0,0,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
+            CONST robtarget tUpperVerticalSweepUp:=[[1086.98,281.215,1583.47],[-1.29E-7,-1E-9,0.707107,0.707107],[1,0,0,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
+         
+            !!! Width sweep
+            CONST robtarget tWidthMeasure:=[[40.536933297,176.929296343,945.886247295],[0.512837598,0.540603123,-0.468764624,-0.474347539],[1,-1,1,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+        !! Lower beam
+            !!!Point sweeps
+            CONST robtarget tStartAbovePointRightLower:=[[972.901797815,385.407063755,113.748458821],[0.000000104,-0.000000258,0.923879518,0.382683467],[1,1,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            CONST robtarget tEndAbovePointRightLower:=[[972.901719347,399.549106485,127.890611905],[0.000000104,-0.000000258,0.923879518,0.382683467],[1,1,-1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            CONST robtarget tStartAbovePointLeftLower:=[[309.744718679,325.084060008,109.080043291],[0.000000104,-0.000000258,0.923879518,0.382683467],[1,2,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            !CONST robtarget tEndAbovePointLeftLower:=[[309.745216121,358.084088439,109.080067383],[0.000000104,-0.000000258,0.923879518,0.382683467],[1,2,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            
+            !!! Vertical sweeps
+            CONST robtarget tLowerVerticalSweepDown:=[[677.22,331.534,65.2084],[3.42E-7,-7.1E-8,0.707107,0.707107],[1,2,-1,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
+            CONST robtarget tLowerVerticalSweepUp:=[[677.22,331.534,100.208],[3.42E-7,-7.1E-8,0.707107,0.707107],[1,2,-2,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
+            
+            
+            
+            VAR robtarget Target_10 :=[[-853.246351224,1509.737822334,335.106523002],[0.998429552,-0.027148063,0.045643111,0.017835867],[1,0,0,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+            VAR robtarget wobjTester := [[-500,0,0],[ 0, 0, 0.7071068, -0.7071068],[1,-1,1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+
+    ! Dataframes for staring measurment and coordinate data.
+    
+        !! Genreal
+        PERS num dataValuesWM{50,5};
+        !! Upper
+        PERS num dataValuesVASUpper{600,5};
+        PERS num dataValuesVSWRUpper{400,5};
+        PERS num dataValuesVSWLUpper{400,5};
+        VAR num smallestdataValuesVSWRUpper{10,4};
+        VAR num smallestdataValuesVSWLUpper{10,4};
+        
+        !! Lower
+        PERS num dataValuesVASLower{600,5};
+        PERS num dataValuesVSWRLower{400,5};
+        PERS num dataValuesVSWLLower{400,5};
+        VAR num smallestdataValuesVSWRLower{10,4};
+        VAR num smallestdataValuesVSWLLower{10,4};
+        
+    ! CONST
+    CONST num goldenRatio:=1.61803;
+
+    ! Speed data
+    CONST speeddata measureNorm:=v200;
+    CONST speeddata measureSlow:=v10;
+
+    ! PERS, i.e Global variables needed to communicate between Task1 (Main) and Task2 (communicaton)
+    PERS bool sentAllSensorValues;
+    PERS bool waiting;
+    PERS bool startSendingValues;
+    PERS bool communicationOn;
+    PERS bool doneUpdating;
+    PERS string whichProc;
+    
+    
+    ! Running conditions
+    PERS bool calcWobj := TRUE;
+    CONST bool testTargets := TRUE;
+    PERS orient lowerOrientinOF;
+    PERS pos finalFinalPoslower;
+    PERS robtarget lowerTestTarget := [[-20.1338,10.619,1426.31],[0.706314,-0.707877,-0.00515156,-0.00227501],[1,1,-1,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
+        
+    
+
+
+
+
+    PROC main()
+
+        ! Declarations for upper beam. 
+        VAR num xObjFrameUpper{3};
+        VAR num yObjFrameUpper{3};
+        VAR num zObjFrameUpper{3};
+        VAR num negXObjFrameUpper{3};
+        VAR num negYObjFrameUpper{3};
+        VAR num negZObjFrameUpper{3};
+
+        VAR num objFrameCoordUpper{3,3};
+        VAR robtarget testTargetRightUpper;
+        VAR robtarget testTargetLeftUpper;
+        VAR orient UpperOrient;
+
+        VAR pos startVecPosUpper;
+        VAR pos endVecPosUpper;
+        VAR num endVecUpper{3};
+        
+        VAR orient upperWidthOrient;
+        VAR num upperWidthMatrix{3,3};
+        VAR num distUpper;
+        VAR num upperDeltaTargetVec{3};
+        VAR num upperDeltaTarget;
+        VAR num upperDistToEdge;
+        VAR num upperDistToEdgeVec{3};
+        VAR pos finalPosUpper;
+        VAR num projectedWobj{3};
+        VAR pos widthTargetPos;
+        VAR num widthTargetNum{3};
+        
+        
+        
+        ! Declerations for lower beam. 
+        
+        VAR num xObjFrameLower{3};
+        VAR num yObjFrameLower{3};
+        VAR num zObjFrameLower{3};
+        VAR num negXObjFrameLower{3};
+        VAR num negYObjFrameLower{3};
+        VAR num negZObjFrameLower{3};
+
+        VAR num objFrameCoordLower{3,3};
+        VAR robtarget testTargetRightLower;
+        VAR robtarget testTargetLeftLower;
+        VAR orient LowerOrientQuart;
+
+        VAR pos startVecPosLower;
+        VAR pos endVecPosLower;
+        VAR num startVecLower{3};
+        VAR num endVecLower{3};
+        VAR num lowerPointSweepDir{3};
+        
+        VAR orient lowerWidthOrient;
+        VAR num lowerWidthMatrix{3,3};
+        
+        VAR num distLower;
+        VAR num lowerDeltaTarget;
+        VAR num lowerDistToEdge;
+        VAR num lowerDistToEdgeVec{3};
+        VAR num lowerDeltaTargetVec{3};
+        VAR num cornerLower{3};
+        VAR pos finalPosLower;
+        VAR  num finalPosLowerNewOf{3};
+        VAR num objFrameMatrix{3,3};
+        VAR orient objFrameOrient;
+
+        
+        VAR num rotMatrixToObjframe{3,3};
+       
+        
+        VAR robtarget superTester;
+        calcWobj := TRUE;
+        
+        IF wBaseHE =  [FALSE,TRUE,"",[[-1207.76,550.955,0.747735],[0.972334,0.000208301,0.00371528,0.233565]],[[0,0,0],[1,0,0,0]]] OR calcWobj = TRUE THEN
+
+            wBaseHE :=  [FALSE,TRUE,"",[[-1207.76,550.955,0.747735],[0.972334,0.000208301,0.00371528,0.233565]],[[0,0,0],[1,0,0,0]]];
+            
+            ! Reset all persistant values
+            nullMatrix;
+            ! Go to startpos
+            startPosMethod;
+            
+            !!!! LOWER START!!!!
+            
+            ! Calculate lower point sweep path          
+            LinalgElWiseSubPosNum tEndAbovePointRightLower.trans, tStartAbovePointRightLower.trans, lowerPointSweepDir;
+ 
+            ! Measure lower beam point right
+            startVecPosLower := findBeamPoint(tStartAbovePointRightLower,"RightLower",dataValuesVSWRLower,smallestdataValuesVSWRLower,lowerPointSweepDir);
+
+            ! Measure lower beam point left
+            endVecPosLower := findBeamPoint(tStartAbovePointLeftLower,"LeftLower",dataValuesVSWLLower,smallestdataValuesVSWLLower,lowerPointSweepDir);
+
+            ! Calculate the beam direction and save it in the direction xObjFrameUpper
+            LinalgElWiseSubPosNum endVecPosLower, startVecPosLower,xObjFrameLower ;
+            
+            !Perform the vertical axis sweep
+            SendingValWhileRunningVASLower;
+            
+            ! Calculate the vector based of the vertical axis sweep.
+            calcTwistVec dataValuesVASLower,tLowerVerticalSweepDown ,tLowerVerticalSweepUp,zObjFrameLower;
+            
+            ! Normalize x and z
+            LinalgNorm xObjFrameLower, xObjFrameLower;
+            LinalgNorm zObjFrameLower, zObjFrameLower;
+            
+            ! Calculate the y axis of the obj frame.
+            LinaglCross zObjFrameLower, xObjFrameLower, yObjFrameLower;
+            
+            ! Get the inverse object frame vectors.
+            LinalgScalarMult -1,xObjFrameLower,negXObjFrameLower;
+            LinalgScalarMult -1,yObjFrameLower,negYObjFrameLower;
+            LinalgScalarMult -1,zObjFrameLower,negZObjFrameLower;
+            
+            ! Create the object frame matrix
+            LinalgColumnStack xObjFrameLower,negZObjFrameLower,yObjFrameLower,objFrameCoordLower;
+            
+            ! Convert the rotational matrix to a quart, then to a num vector. Normalize and the turn back into a quart.
+            LowerOrientQuart := GenerMatrixToOrient(objFrameCoordLower);
+
+        
+    
+            
+            !!!! LOWER END!!!!
+            
+            !!!! UPPER START!!!!
+            
+             ! Measure the vertex point to the right
+            startVecPosUpper := findBeamPoint(tAbovePointRightUpper, "RightUpper",dataValuesVSWRUpper,smallestdataValuesVSWRUpper,[0,0,-1]);
+            
+            ! Measure the vertex point to the left
+            endVecPosUpper := findBeamPoint(tAbovePointLeftUpper, "LeftUpper",dataValuesVSWLUpper,smallestdataValuesVSWLUpper,[0,0,-1]);
+            
+            
+            ! Calculate the beam direction and save it in the direction xObjFrameUpper
+            LinalgElWiseSubPosNum endVecPosUpper, startVecPosUpper, xObjFrameUpper;
+
+
+            ! Perform the vertical axis sweep
+            SendingValWhileRunningVASUpper;
+
+            ! Calculate the vector based of the vertical axis sweep.
+            calcTwistVec dataValuesVASUpper,tUpperVerticalSweepDown ,tUpperVerticalSweepUp,zObjFrameUpper;
+   
+            ! Normalize x and z
+            LinalgNorm xObjFrameUpper, xObjFrameUpper;
+            LinalgNorm zObjFrameUpper, zObjFrameUpper;
+            
+            ! Calculate the y axis of the obj frame.
+            LinaglCross zObjFrameUpper, xObjFrameUpper, yObjFrameUpper;
+
+            !Get the shiften direction
+            LinalgScalarMult -1,xObjFrameUpper,negXObjFrameUpper;
+            LinalgScalarMult -1,yObjFrameUpper,negYObjFrameUpper;
+            LinalgScalarMult -1,zObjFrameUpper,negZObjFrameUpper;
+            
+            ! Create object frame matrix
+            LinalgColumnStack xObjFrameUpper,yObjFrameUpper,zObjFrameUpper,objFrameMatrix;
+
+            ! Create the orientation matrix
+             LinalgColumnStack xObjFrameUpper,negZObjFrameUpper,yObjFrameUpper,objFrameCoordUpper;
+
+            ! Convert the rotational matrix to a quart, then to a num vector. Normalize and the turn back into a quart.
+            UpperOrient := GenerMatrixToOrient(objFrameCoordUpper);
+            objFrameOrient := GenerMatrixToOrient(objFrameMatrix);
+
+            TPWrite("xobj" + ValToStr(xObjFrameUpper));
+            TPWrite("yobj" + ValToStr(yObjFrameUpper));
+            TPWrite("zobj" + ValToStr(zObjFrameUpper));
+            
+            !!!! UPPER END!!!!
+            
+            
+            !!! WIDTH MEASUREMENTS
+            
+            !! Upper orientation
+            LinalgColumnStack negYObjFrameUpper,negZObjFrameUpper,xObjFrameUpper,upperWidthMatrix;
+            upperWidthOrient := GenerMatrixToOrient(upperWidthMatrix);
+            
+            ! Lower orientation
+            LinalgColumnStack negYObjFrameLower,negZObjFrameLower,xObjFrameLower,lowerWidthMatrix;
+            lowerWidthOrient := GenerMatrixToOrient(LowerWidthMatrix);
+           
+            distUpper := SendingValWhileRunningWM(WidthPos,upperWidthOrient);
+            distLower := SendingValWhileRunningWM(WidthPos,lowerWidthOrient);
+                
+            ! Calculation of object frame, project a point on the beam to the corner.
+            LinalgElWiseSubPosNum WidthPos.trans, endVecPosUpper, upperDeltaTargetVec;
+            upperDeltaTarget := LinalgDot(upperDeltaTargetVec,xObjFrameUpper);
+            upperDistToEdge := upperDeltaTarget + distUpper - 60;
+            
+            LinalgScalarMult upperDistToEdge, xObjFrameUpper, upperDistToEdgeVec; 
+
+            GenerPosToNumVector endVecPosUpper,endVecUpper;
+            LinalgElWiseAdd endVecUpper, upperDistToEdgeVec,projectedWobj;
+            
+            finalPosUpper := GenerNumVectorToPos(projectedWobj);
+            Target_10.trans := finalPosUpper;
+            Target_10.rot := UpperOrient;
+            
+            ! Calculate the lower axles point in the original object frame. 
+            LinalgElWiseSubPosNum WidthPos.trans, endVecPosLower, lowerDeltaTargetVec;
+            lowerDeltaTarget := LinalgDot(LowerDeltaTargetVec,xObjFrameLower);
+            lowerDistToEdge := lowerDeltaTarget + distLower - 60;
+            
+            LinalgScalarMult lowerDistToEdge, xObjFrameLower, lowerDistToEdgeVec; 
+
+            GenerPosToNumVector endVecPosLower,endVecLower;
+            LinalgElWiseAdd endVecLower, lowerDistToEdgeVec,cornerLower;
+            
+            finalPosLower := GenerNumVectorToPos(cornerLower);
+            
+            
+            ! Calculation of finalPosLower in the correct coordinate system.
+            ! First let's convert it so its related to the new origin.
+            
+            LinalgElWiseSubPosNum finalPosLower,finalPosUpper, finalPosLowerNewOf;
+            LinalgMatrixVectorProduct objFrameMatrix,finalPosLowerNewOf,finalPosLowerNewOf;
+            finalFinalPoslower := GenerNumVectorToPos(finalPosLowerNewOf);
+            TPWrite(" Calculating new pos for lower: ");
+            TPWrite(ValToStr(finalPosLower) + " -");
+            TPWrite(ValToStr(finalPosUpper));
+            TPWrite(ValToStr(finalPosLowerNewOf));
+            ! Now I have the position in the new system but not the orientation. To get the new orientation I will transform my rotaional matrxi with another rotaional matrix. And then convert it to a orient.
+            
+            ! Transfer the rotational matrix to the new coordinate system.
+            LinalgMatmul objFrameMatrix, objFrameCoordLower, rotMatrixToObjframe;
+            
+            ! Calculate the new orientation
+            
+            lowerOrientinOF := GenerMatrixToOrient(rotMatrixToObjframe);
+            
+
+
+        
+            IF testTargets = TRUE THEN
+                
+                ! Give the testtarget a target, and then assign the roation.
+                testTargetRightUpper := tAbovePointRightUpper;
+                testTargetRightUpper.trans := startVecPosUpper;
+                testTargetRightUpper.rot := UpperOrient;
+
+                testTargetLeftUpper := tAbovePointLeftUpper;
+                testTargetLeftUpper.trans := endVecPosUpper;
+                testTargetLeftUpper.rot := UpperOrient;
+                
+                
+                ! Give the testtarget a target, and then assign the roation.
+                testTargetRightLower := tStartAbovePointRightLower;
+                testTargetRightLower.trans := startVecPosLower;
+                testTargetRightLower.rot := LowerOrientQuart;
+        
+                testTargetLeftLower := tStartAbovePointLeftLower;
+                testTargetLeftLower.trans := endVecPosLower;
+                testTargetLeftLower.rot := LowerOrientQuart;
+            
+                ! Move to the test target
+                MoveJ testTargetRightUpper,v300,fine,tLongLaser\WObj:=wBaseHE;
+                WaitTime 4;
+        
+                MoveJ testTargetLeftUpper,v300,fine,tLongLaser\WObj:=wBaseHE;
+                WaitTime 4;
+                
+                ! Move to the test target
+                MoveJ testTargetRightLower,v300,fine,tLongLaser\WObj:=wBaseHE;
+                WaitTime 4;
+        
+                MoveJ testTargetLeftLower,v300,fine,tLongLaser\WObj:=wBaseHE;
+                WaitTime 4;
+                
+            ENDIF
+            
+        
+            
+            startPosMethod;
+            
+            wBaseHE.oframe := [finalPosUpper,objFrameOrient]; 
+            
+            calcWobj := FALSE;
+            
+        
+        ELSE 
+        
+        
+            ! Give the testtarget a target, and then assign the roation.
+            lowerTestTarget := tStartAbovePointRightLower;
+            lowerTestTarget .trans := finalFinalPoslower;
+            lowerTestTarget .rot := lowerOrientinOF;
+            
+            MoveJ Offs(lowerTestTarget,-680,0,0),v300,fine,tLongLaser\WObj:=wBaseHE;
+            !WaitTime 10;
+        
+            Path_10;
+      
+
+        
+        
+        
+    
+        ENDIF
+        
+        TurnOffCommunication;
+
+
+
+    ENDPROC
+    
+    FUNC num SendingValWhileRunningWM(robtarget measureTarget,orient orientation)
+        VAR bool goldenFound;
+        VAR num sum;
+        VAR num counter := 1;
+        
+        measureTarget.rot := orientation;
+        
+        whichProc:="WM";
+        WidthMeasure(measureTarget);
+        sentAllSensorValues:=TRUE;
+        
+        FOR i FROM 1 TO Dim(dataValuesWM,1) DO
+            IF dataValuesWM{i,1} = goldenRatio THEN
+                goldenFound := TRUE;
+            ELSEIF goldenFound = FALSE THEN
+                sum := sum + dataValuesWM{i,1};
+                counter := counter + 1;
+            ELSE
+                ! Do nothing
+            ENDIF
+        ENDFOR
+
+         nullMatrix ;
+        RETURN sum/(counter-1);
+    ENDFUNC
+
+    PROC SendingValWhileRunningVSWRUpper(robtarget up,robtarget down,num i)
+        whichProc:="VSWRUpper";
+
+        i:=i*2-1;
+        MeasureVertex down,up;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWRUpper,130,smallestdataValuesVSWRUpper;
+
+        i:=i+1;
+
+        MeasureVertex up,down;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWRUpper,130,smallestdataValuesVSWRUpper;
+
+    ENDPROC
+
+    PROC SendingValWhileRunningVSWLUpper(robtarget up,robtarget down,num i)
+        whichProc:="VSWLUpper";
+
+        i:=i*2-1;
+        MeasureVertex down,up;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWLUpper,130,smallestdataValuesVSWLUpper;
+
+        i:=i+1;
+
+        MeasureVertex up,down;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWLUpper,130,smallestdataValuesVSWLUpper;
+    ENDPROC
+    
+    PROC SendingValWhileRunningVSWRLower(robtarget up,robtarget down,num i)
+        whichProc:="VSWRLower";
+
+        i:=i*2-1;
+        MeasureVertex down,up;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWRLower,50,smallestdataValuesVSWRLower;
+
+        i:=i+1;
+
+        MeasureVertex up,down;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWRLower,50,smallestdataValuesVSWRLower;
+
+    ENDPROC
+    
+    PROC SendingValWhileRunningVSWLLower(robtarget up,robtarget down,num i)
+        whichProc:="VSWLLower";
+
+        i:=i*2-1;
+        MeasureVertex down,up;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWLLower,50,smallestdataValuesVSWLLower;
+
+        i:=i+1;
+
+        MeasureVertex up,down;
+        sentAllSensorValues:=TRUE;
+
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+        smallestValueDistance i,dataValuesVSWLLower,50,smallestdataValuesVSWLLower;
+    ENDPROC
+
+    PROC MeasureVertex(robtarget up,robtarget down)
+        MoveL up,v2000,fine,tLongLaser\WObj:=wBaseHE;
+        startSendingValues:=TRUE;
+        !waiting while waiting is true
+        WaitUntil waiting=FALSE;
+        MoveL down,v50,fine,tLongLaser\WObj:=wBaseHE;
+        waiting:=TRUE;
+        startSendingValues:=FALSE;
+
+    ENDPROC
+
+
+
+    PROC nullMatrix()
+        VAR num zeroDataValuesVASUpper{600,5};
+        VAR num zerodataValuesVSWRUpper{400,5};
+        VAR num zerodataValuesVSWLUpper{400,5};
+        VAR num zeroDataValuesVASLower{600,5};
+        VAR num zerodataValuesVSWRLower{400,5};
+        VAR num zerodataValuesVSWLLower{400,5};
+        VAR num zeroDataValuesFBR{600,5};
+        VAR num zeroDataValuesFBL{600,5};
+        VAR num zeroDataValuesWM{50,5};
+        VAR num zeroSmallestdataValuesVSWRUpper{10,4};
+        VAR num zeroSmallestdataValuesVSWLUpper{10,4};
+
+        dataValuesVASUpper:=zeroDataValuesVASUpper;
+        dataValuesVSWRUpper:=zerodataValuesVSWRUpper;
+        dataValuesVSWLUpper:=zerodataValuesVSWLUpper;
+        dataValuesVSWRLower:=zerodataValuesVSWRUpper;
+        dataValuesVSWLLower:=zerodataValuesVSWLUpper;
+        dataValuesWM:=zeroDataValuesWM;
+        smallestdataValuesVSWRUpper:=zeroSmallestdataValuesVSWRUpper;
+        smallestdataValuesVSWLUpper:=zeroSmallestdataValuesVSWLUpper;
+    ENDPROC
+
+
+    PROC SendingValWhileRunningVASUpper()
+        whichProc:="VASUpper";
+        VerticalAxleSweepUpper;
+        sentAllSensorValues:=TRUE;
+    ENDPROC
+    
+    PROC SendingValWhileRunningVASLower()
+        whichProc:="VASLower";
+        VerticalAxleSweepLower;
+        sentAllSensorValues:=TRUE;
+    ENDPROC
+
+    PROC startPosMethod()
+        MoveJ tStartPos,v2000,z100,tLongLaser\WObj:=wBaseHE;
+    ENDPROC
+
+    PROC VerticalAxleSweepUpper()
+        MoveJ tUpperVerticalSweepUp,v2000,fine,tLongLaser\WObj:=wBaseHE;
+        startSendingValues:=TRUE;
+        WaitUntil waiting=FALSE;
+        MoveL tUpperVerticalSweepDown,measureSlow,fine,tLongLaser\WObj:=wBaseHE;
+        waiting:=TRUE;
+        startSendingValues:=FALSE;
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+    ENDPROC
+    
+    PROC VerticalAxleSweepLower()
+        MoveJ tLowerVerticalSweepUp,v2000,fine,tLongLaser\WObj:=wBaseHE;
+        startSendingValues:=TRUE;
+        WaitUntil waiting=FALSE;
+        MoveL tLowerVerticalSweepDown,measureSlow,fine,tLongLaser\WObj:=wBaseHE;
+        waiting:=TRUE;
+        startSendingValues:=FALSE;
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+    ENDPROC
+    
+    PROC WidthMeasure(robtarget measurementTarget)
+        MoveJ measurementTarget,v2000,fine,tLongLaser\WObj:=wBaseHE;
+        startSendingValues:=TRUE;
+        WaitUntil waiting=FALSE;
+        WaitTime 0.5;
+        waiting:=TRUE;
+        startSendingValues:=FALSE;
+        WaitUntil doneUpdating=TRUE;
+        doneUpdating:=FALSE;
+    ENDPROC
+
+    PROC TurnOffCommunication()
+        communicationOn:=FALSE;
+        startSendingValues:=TRUE;
+    ENDPROC
+    PROC Path_10()
+
+    ENDPROC
+
+
+
+
+
+
+
+ENDMODULE

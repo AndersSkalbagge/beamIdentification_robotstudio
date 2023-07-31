@@ -1,0 +1,227 @@
+MODULE Stats
+
+! Modifies the given array the linear regression of the two give arrays/vectors/lists.
+PROC StatsLinReg(num X{*}, num Y{*}, INOUT num regression{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num X_dim;
+    VAR num Y_dim;
+    VAR num X_avg;
+    VAR num Y_avg;
+    VAR num counter;
+    VAR num SSxy := 0;
+    VAR num SSxx := 0;
+    VAR num beta_0;
+    VAR num beta_1;
+    VAR bool goldenReached := FALSE;
+
+    X_dim := Dim(X, 1);
+    Y_dim := Dim(Y, 1);
+    IF X_dim <> Y_dim THEN
+        regression := [0, 0];
+        TPWrite("Regression Error: The dimensions do not match");
+        RETURN;
+    ENDIF
+
+    X_avg := StatsAvrg(X);
+    Y_avg := StatsAvrg(Y);
+
+    FOR counter FROM 1 TO Y_dim DO
+        IF Y{counter} = goldenRatio THEN
+            goldenReached := TRUE;
+            Y_dim := counter - 1;
+        ENDIF
+
+        IF NOT goldenReached THEN
+            SSxy := SSxy + (X{counter} - X_avg) * (Y{counter} - Y_avg);
+            SSxx := SSxx + Pow(X{counter} - X_avg, 2);
+        ENDIF
+    ENDFOR
+    
+    IF Y_dim = 0 THEN
+        TPWrite("StatsLinReg ERROR: Empty vector");
+        regression := [goldenRatio,goldenRatio];
+    ELSE
+        beta_1 := SSxy / SSxx;
+        beta_0 := Y_avg - beta_1 * X_avg;
+        regression := [beta_0, beta_1];
+    ENDIF
+ENDPROC
+
+! Modifies the X_filt and Y_filt arrays so that only values that are threshold standard divations away remain.
+PROC StatsZscoreOutlierFilter(num X{*}, num Y{*}, num threshold, INOUT num X_filt{*}, INOUT num Y_filt{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num Y_avg;
+    VAR num z_score;
+    VAR num std_dev;
+    VAR num counter := 1;
+    VAR bool goldenReached := FALSE;
+
+    IF Dim(X, 1) <> Dim(Y, 1) THEN
+        TPWrite("Z filter: The dimensions do not match");
+        RETURN;
+    ENDIF
+
+    std_dev := StatsStdDiv(Y);
+    Y_avg := StatsAvrg(Y);
+
+    FOR i FROM 1 TO Dim(Y, 1) DO
+        IF Y{i} = goldenRatio THEN
+            goldenReached := TRUE;
+            X_filt{counter} := goldenRatio;
+            Y_filt{counter} := goldenRatio;
+        ELSE
+            IF NOT goldenReached THEN
+                z_score := (Y{i} - Y_avg) / std_dev;
+                IF Abs(z_score) < threshold THEN
+                    X_filt{counter} := X{i};
+                    Y_filt{counter} := Y{i};
+                    counter := counter + 1;
+                ENDIF
+            ENDIF
+        ENDIF
+    ENDFOR
+ENDPROC
+
+! Modifies the X_filt and Y_filt arrays so that only values that are threshold standard divations away remain.
+PROC ZFilterForVertex(num dist{*},num X{*}, num Y{*}, num Z{*}, num threshold, INOUT num dist_filt{*},INOUT num X_filt{*}, INOUT num Y_filt{*},INOUT num Z_filt{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num dist_avg;
+    VAR num z_score;
+    VAR num std_dev;
+    VAR num counter := 0;
+    VAR bool goldenReached := FALSE;
+
+    std_dev := StatsStdDiv(dist);
+    TPWrite("STD: " + ValToStr(std_dev));
+    IF std_dev = 0 THEN
+        dist_filt := dist;
+        X_filt := X;
+        Y_filt := Y;
+        Z_filt := Z;
+    ELSE
+        dist_avg := StatsAvrg(dist);
+
+    FOR i FROM 1 TO Dim(dist, 1) DO
+        IF dist{i} = goldenRatio THEN
+            goldenReached := TRUE;
+            X_filt{counter} := goldenRatio;
+            Y_filt{counter} := goldenRatio;
+            Z_filt{counter} := goldenRatio;
+            dist_filt{counter} := goldenRatio;
+        ELSE
+            IF NOT goldenReached THEN
+                z_score := (dist{i} - dist_avg) / std_dev;
+                TPWrite("Z-score: " + ValToStr(z_score));
+                IF Abs(z_score) < threshold THEN
+                    counter := counter + 1;
+                    X_filt{counter} := X{i};
+                    Y_filt{counter} := Y{i};
+                    Z_filt{counter} := Z{i};
+                    dist_filt{counter} := dist{i};
+                    TPWrite("Removed a value");
+                    
+                ENDIF
+            ENDIF
+        ENDIF
+    ENDFOR
+        
+    ENDIF
+    TPWrite("Numer values removed in func " + ValToStr(Dim(dist,1) - counter));
+    IF counter < 10 THEN
+        dist_filt{counter} := goldenRatio;
+        X_filt{counter} := goldenRatio;
+        Y_filt{counter} := goldenRatio;
+        Z_filt{counter} := goldenRatio;
+    ENDIF
+ENDPROC
+
+    
+    
+
+! Calculates the standard deviation of the given array.
+FUNC num StatsStdDiv(num Y{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num Y_avg ;
+    VAR num sum_diff_squared := 0;
+    VAR num std_dev := 0;
+    VAR bool goldenReached := FALSE;
+    VAR num nbrEl;
+    nbrEl :=  Dim(Y, 1);
+    
+    Y_avg :=  StatsAvrg(Y);
+    
+    ! Calculate the sum of squared differences.
+    FOR counter FROM 1 TO Dim(Y, 1) DO
+        IF Y{counter} = goldenRatio THEN
+            goldenReached :=TRUE;
+            nbrEl := counter -1;
+        ENDIF
+        IF goldenReached = FALSE THEN
+            sum_diff_squared := sum_diff_squared + Pow(Y{counter} - Y_avg, 2);    
+        ENDIF
+        
+    ENDFOR
+    
+    IF nbrEL = 0 THEN
+        TPWrite("StatsStdDiv ERROR: EMPTY VECTOR");
+        RETURN goldenRatio;
+    ENDIF
+    
+    ! Calculate the standard deviation.
+    std_dev := Sqrt(sum_diff_squared / nbrEl);
+    
+    RETURN std_dev;
+ENDFUNC
+
+! Returns the sum of the values in an 1d array.
+FUNC num StatsSum(num vector{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num sum := 0; 
+    VAR num counter := 0;
+    VAR bool goldenReached := FALSE;
+
+    FOR counter FROM 1 TO Dim(vector, 1) DO
+        IF vector{counter} = goldenRatio THEN
+            goldenReached := TRUE;
+        ENDIF
+        
+        IF NOT goldenReached THEN
+            sum := sum + vector{counter};
+        ENDIF
+    ENDFOR
+    
+    RETURN sum;
+ENDFUNC
+
+FUNC num StatsAvrg(num vector{*})
+    CONST num goldenRatio := 1.61803;
+    VAR num sum := 0; 
+    VAR num avrg := 0;
+    VAR num counter := 0;
+    VAR bool goldenReached := FALSE;
+    VAR num nbrEl; 
+    nbrEL := Dim(vector, 1);
+
+    FOR counter FROM 1 TO Dim(vector, 1) DO
+        IF vector{counter} = goldenRatio THEN
+            goldenReached := TRUE;
+            nbrEl := counter - 1;
+        ENDIF
+        
+        IF NOT goldenReached THEN
+            sum := sum + vector{counter};
+        ENDIF
+    ENDFOR
+    
+    IF nbrEL = 0 THEN
+        TPWrite("StatsAvrg ERROR: EMPTY VECTOR");
+        RETURN goldenRatio;
+    ENDIF
+    
+    avrg := sum / nbrEl;
+    
+    RETURN avrg;
+ENDFUNC
+
+
+ENDMODULE

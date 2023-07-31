@@ -1,0 +1,281 @@
+MODULE HelperFunc
+
+
+FUNC pos findBeamPoint(robtarget startPos,string identifier,num dataframe{*,*}, num smallestdataValues{*,*},num path{*})
+  
+    
+    VAR robtarget tVertexPointUp;
+    VAR robtarget tVertexPointDown;
+ 
+    VAR num offset := 0;
+    VAR num distance := 0;
+    VAR num setValues := 0;
+    VAR num meanDist;
+    VAR num meanxPos;
+    VAR num meanyPos;
+    VAR num meanzPos;
+    VAR bool continueOffset := TRUE;
+    VAR orient orientQuart;
+    VAR num rotMatrix{3,3};
+    VAR num laserDirZ{3};
+    VAR pos vertexPoint;
+    VAR num fixedDistToBeam;
+    VAR num offsetPath{3};
+    VAR num offSetItteration{3};
+    
+    ! The offset is set to the normalized path.
+    LinalgNorm path, offsetPath;
+    
+    LinalgScalarMult 1,offsetPath, offSetItteration;
+    
+    tVertexPointUp := startPos;
+    tVertexPointDown := startPos;
+    
+    MoveJ startPos,v1000,fine,tLongLaser\WObj:=wBaseHE;
+    fixedDistToBeam := GInput(giDistOMH3)/10;
+    TPWrite("FixedDist: " + ValToStr(fixedDistToBeam)); 
+    WHILE continueOffset = TRUE DO
+        LinalgElWiseAdd offsetPath, offSetItteration, offsetPath;
+        !TPWrite("Current offset: " + ValToStr(offsetPath));
+        MoveJ Offs(startPos, offsetPath{1}, offsetPath{2}, offsetPath{3}),measureNorm,fine,tLongLaser\WObj:=wBaseHE;
+        distance := GInput(giDistOMH3)/10;
+!        TPWrite("Reading: " + ValToStr(distance) + " mm");
+        
+        IF distance < fixedDistToBeam - 3 AND setValues = 0 THEN    
+            TPWrite("FirstDist: " + ValToStr(distance)); 
+        
+            tVertexPointUp.trans.x := tVertexPointUp.trans.x + offsetPath{1};
+            tVertexPointUp.trans.y := tVertexPointUp.trans.y + offsetPath{2};
+            tVertexPointUp.trans.z := tVertexPointUp.trans.z + offsetPath{3};
+           
+            setValues := setValues + 1;
+            WaitTime 0.04;
+        ELSEIF distance > 200 AND LinalgGetLength(offsetPath) > 30 AND setValues = 1 THEN
+            TPWrite("SecondDist: " + ValToStr(distance)); 
+            
+            tVertexPointDown.trans.x := tVertexPointDown.trans.x + offsetPath{1};
+            tVertexPointDown.trans.y := tVertexPointDown.trans.y + offsetPath{2};
+            tVertexPointDown.trans.z := tVertexPointDown.trans.z + offsetPath{3};
+            continueOffset := FALSE;
+            WaitTime 0.04;
+        ENDIF
+    
+    ENDWHILE
+    
+    IF identifier = "RightUpper" THEN
+        FOR i FROM 1 TO 5 DO
+            SendingValWhileRunningVSWRUpper tVertexPointUp,tVertexPointDown,i;
+        ENDFOR
+        meanValueMatrix smallestdataValuesVSWRUpper, meanDist, meanxPos, meanyPos, meanzPos;
+        
+    ELSEIF identifier = "LeftUpper" THEN
+        FOR i FROM 1 TO 5 DO
+            SendingValWhileRunningVSWLUpper tVertexPointUp,tVertexPointDown,i;
+        ENDFOR
+        meanValueMatrix smallestdataValuesVSWLUpper, meanDist, meanxPos, meanyPos, meanzPos;
+        
+    ELSEIF identifier = "RightLower" THEN
+        FOR i FROM 1 TO 5 DO
+            SendingValWhileRunningVSWRLower tVertexPointUp,tVertexPointDown,i;
+        ENDFOR
+        meanValueMatrix smallestdataValuesVSWRLower, meanDist, meanxPos, meanyPos, meanzPos;
+        
+    ELSEIF identifier = "LeftLower" THEN
+        FOR i FROM 1 TO 5 DO
+            SendingValWhileRunningVSWLLower tVertexPointUp,tVertexPointDown,i;
+        ENDFOR
+        meanValueMatrix smallestdataValuesVSWLLower, meanDist, meanxPos, meanyPos, meanzPos;
+        
+    ENDIF
+    
+
+    orientQuart := startPos.rot;
+    GenerQuartToRotMatrix orientQuart, rotMatrix;
+
+    LinalgGetCol rotMatrix, 3, laserDirZ;
+
+    !LaserDirZ is now normalized
+    LinalgNorm laserDirZ, laserDirZ;
+
+    LinalgScalarMult meanDist - 60, laserDirZ, laserDirZ;
+
+    vertexPoint.x := meanxPos + laserDirZ{1};
+    vertexPoint.y := meanyPos + laserDirZ{2};
+    vertexPoint.z := meanzPos + laserDirZ{3};  
+    
+    TPWrite("LaserVec: " + ValToStr(laserDirZ));
+    TPWrite("MeanDist: " + ValToStr(meanDist));
+    TPWrite("meanX: " + ValToStr(meanxPos)); 
+    TPWrite("meanY: " + ValToStr(meanyPos)); 
+    TPWrite("meanZ: " + ValToStr(meanzPos)); 
+    
+    RETURN vertexPoint;
+ENDFUNC
+
+    
+PROC smallestValueDistance(num counter,num dataValuesX{*,*},num cutOff, INOUT num smallestDataValues{*,*})
+    VAR num currIndex := 1;
+    VAR num currDistance;
+    VAR num smallestDistance;
+    VAR bool goldenRatioFound := FALSE;
+    CONST num goldenRatio := 1.61803;
+    !The values are saved in a vector in GetValues 
+    smallestDistance := 10000;
+    FOR i FROM 1 TO Dim(dataValuesX,1) DO
+        currDistance := dataValuesX{i, 1};
+        IF currDistance = goldenRatio THEN
+            !TPwrite("GoldenRatio found on row: " + ValToStr(i));
+                goldenRatioFound := TRUE;
+        ENDIF
+        IF smallestDistance > currDistance AND goldenRatioFound = FALSE AND currDistance > cutOff THEN
+            smallestDistance := currDistance;
+            currIndex := i;
+        ENDIF
+
+     ENDFOR
+    !TPWrite("Smallest distance:" + ValToStr(smallestDistance));
+     !TpWrite("Index:" + ValToStr(currIndex));
+     smallestDataValues{counter, 1} := smallestDistance; !Distance
+     smallestDataValues{counter, 2} := dataValuesX{currIndex, 2}; !xPos
+     smallestDataValues{counter, 3} := dataValuesX{currIndex, 3}; !yPos
+     smallestDataValues{counter, 4} := dataValuesX{currIndex, 4}; !zPos
+
+    
+ENDPROC
+        
+
+   PROC calcTwistVec(num dataframe{*,*}, robtarget startPos, robtarget endPos, INOUT num vector{*})
+    CONST num goldenRatio := 1.61803;
+    CONST num distFromTool := 60;
+    VAR string identifier:="";
+    VAR num distanceFrom;
+    VAR num currPos{3};
+    VAR num thresholdZ;
+    VAR num distanceFromStart{600};
+    VAR num regressionVector{2};
+    VAR num laserMeasurements{600};
+    VAR num currIndexGR;
+    VAR num counter := 0;
+    VAR num startPosVector{3};
+    VAR num endPosVector{3};
+    VAR num swipeEnd;
+    VAR bool foundEnd;
+    VAR num rotMatrix{3,3};
+    VAR num laserDir{3};
+    VAR num laserDirStart{3};
+    VAR num laserDirEnd{3};
+    VAR num vecStart{3};
+    VAR num vecEnd{3};
+
+    
+        
+    GenerPosToNumVector startPos.trans, startPosVector;
+    GenerPosToNumVector endpos.trans,endPosVector;
+    GenerQuartToRotMatrix startPos.rot,rotMatrix;
+    LinalgGetCol rotMatrix,2,laserDir;
+    LinalgNorm laserDir,laserDir;
+    
+    
+
+    !sensor values from the dataframe, i.e laser measurement values  
+    LinalgGetCol dataframe,1,laserMeasurements;
+
+   
+    identifier:="giDistOMH3";
+
+
+    !remove undefined values for the sensor
+    FOR i FROM 1 TO Dim(dataframe,1) DO
+        counter := counter + 1;
+        IF dataframe{i, 1} = goldenRatio THEN
+            dataframe{i, 5} := goldenRatio; 
+            !RETURN;
+            currIndexGR := i;
+            
+        ELSEIF dataframe {i, 1} = 0 THEN
+            !do nothing 
+             currIndexGR := i - 1;
+            
+        ELSE 
+        !xPos
+        currPos{1}:=dataframe{i,2};
+        !yPos
+        currPos{2}:=dataframe{i,3};
+        !zPos
+        currPos{3}:=dataframe{i,4};
+        
+        distanceFrom := LinalgDistBetweenPoints(currPos, startPosVector);
+        dataframe{i,5} := distanceFrom;
+        distanceFromStart{i} := distanceFrom;
+        ENDIF 
+        
+    ENDFOR
+    distanceFromStart{counter} := goldenRatio;
+    dataframe{counter, 5} := goldenRatio;
+    
+   
+    !Pre regression filtering
+    !Define filter thresholds
+    !z - filters out extreme values
+    !end - How close to the endpoint to stop measuring
+    !start - How close to the startpoint to start measuring
+
+    thresholdZ:=2;
+
+  
+       
+    
+    StatsZscoreOutlierFilter distanceFromStart, laserMeasurements,thresholdZ,distanceFromStart,laserMeasurements;
+
+    StatsLinReg distanceFromStart, laserMeasurements, regressionVector;
+
+    foundEnd := FALSE;  
+    FOR i FROM 1 TO Dim(distanceFromStart,1) DO
+        IF distanceFromStart{i} = goldenRatio AND foundEnd = FALSE THEN
+            swipeEnd := distanceFromStart{i-1};
+            foundEnd := TRUE;
+        ENDIF
+    ENDFOR
+    LinalgScalarMult (regressionVector{2}*swipeEnd + regressionVector{1}-distFromTool), laserDir,laserDirEnd; 
+    LinalgScalarMult (regressionVector{1} -distFromTool), laserDir,laserDirStart; 
+    
+    LinalgElWiseAdd endPosVector, laserDirStart,vecStart;
+    LinalgElWiseAdd startPosVector, laserDirEnd,vecEnd;
+    
+    LinalgElWiseSub vecEnd,vecStart,vector;
+    
+   
+
+ENDPROC
+
+
+PROC meanValueMatrix(num matrix{*, *}, INOUT num meanDist, INOUT num meanxPos, INOUT num meanyPos, INOUT num meanzPos)
+    
+    VAR num sumDist;
+    VAR num sumxPos;
+    VAR num sumyPos;
+    VAR num sumzPos;
+    VAR num size;
+    
+    size := Dim(matrix,1);
+
+    FOR i FROM 1 TO size DO
+       
+        sumDist := sumDist + matrix{i,1};
+        sumxPos := sumxPos + matrix{i,2};
+        sumyPos := sumyPos + matrix{i,3};
+        sumzPos := sumzPos + matrix{i,4};
+
+    ENDFOR 
+    
+    meanDist := sumDist / size;
+    meanxPos := sumxPos / size;
+    meanyPos := sumyPos / size;
+    meanzPos := sumzPos / size;
+   
+ENDPROC
+
+
+
+
+ENDMODULE

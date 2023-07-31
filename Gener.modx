@@ -1,0 +1,142 @@
+MODULE Gener
+    
+    
+
+PROC GenerQuartToRotMatrix(orient orientQuart, INOUT num rot_matrix{*, *})
+    
+    Var num quart{4};
+    
+    VAR num r00;
+    VAR num r01;
+    VAR num r02;
+    
+    VAR num r10;
+    VAR num r11;
+    VAR num r12;
+    
+    VAR num r20;
+    VAR num r21;
+    VAR num r22;
+    
+    GenerOrientToNumVector orientQuart, quart;
+    
+    
+    !First row of rotation matrix
+    r00 := 2 * (quart{1} * quart{1} + quart{2} * quart{2}) - 1;
+    r01 := 2 * (quart{2} * quart{3} - quart{1} * quart{4});
+    r02 := 2 * (quart{2} * quart{4} + quart{1} * quart{3});
+    
+    !Second row of the rotation matrix
+    r10 := 2 * (quart{2} * quart{3} + quart{1} * quart{4});
+    r11 := 2 * (quart{1} * quart{1} + quart{3} * quart{3}) - 1;
+    r12 := 2 * (quart{3} * quart{4} - quart{1} * quart{2});
+     
+    !Third row of the rotation matrix
+    r20 := 2 * (quart{2} * quart{4} - quart{1} * quart{3});
+    r21 := 2 * (quart{3} * quart{4} + quart{1} * quart{2});
+    r22 := 2 * (quart{1} * quart{1} + quart{4} * quart{4}) - 1;
+    
+    rot_matrix := [[r00, r01, r02], [r10, r11, r12], [r20, r21, r22]];
+        
+ENDPROC
+
+FUNC num GenerDegreesToRadians(num degrees)
+    CONST num pi := 3.141592653589793;
+    RETURN degrees * (pi / 180);
+ENDFUNC
+
+FUNC num GenerRadiansToDegrees(num radians)
+    CONST num pi := 3.141592653589793;
+    RETURN radians * (180 / pi);
+ENDFUNC
+
+    
+FUNC orient GenerMatrixToOrient(num rotation_matrix{*, *})
+       
+    VAR num trace;
+    VAR num S; !What is S
+    VAR num qw;
+    VAR num qx;
+    VAR num qy;
+    VAR num qz;
+    VAR num numQuart{4};
+    
+    trace := rotation_matrix{1, 1} + rotation_matrix{2, 2} + rotation_matrix{3, 3};
+    
+    IF trace > 0 THEN
+    
+        S := Sqrt(trace + 1) * 2;
+        
+        qw := 0.25*S;
+        qx := ( rotation_matrix{3, 2} - rotation_matrix{2, 3} ) / S;
+        qy := ( rotation_matrix{1, 3} - rotation_matrix{3, 1} ) / S;
+        qz := ( rotation_matrix{2, 1} - rotation_matrix{1, 2} ) / S;
+    
+    ELSEIF rotation_matrix{1, 1} > rotation_matrix{2, 2} AND rotation_matrix{1, 1} > rotation_matrix{3, 3} THEN
+    
+        S := Sqrt(1 + rotation_matrix{1, 1} - rotation_matrix{2, 2} - rotation_matrix{3, 3}) * 2;
+        qw := ( rotation_matrix{3, 2} - rotation_matrix{2, 1} ) / S;
+        qx := 0.25*S;
+        qy := ( rotation_matrix{1, 2} + rotation_matrix{2, 1} ) / S;
+        qz := ( rotation_matrix{1, 3} + rotation_matrix{3, 1} ) / S;
+    
+    ELSEIF rotation_matrix{2, 2} > rotation_matrix{3, 3} THEN
+        S := Sqrt(1 + rotation_matrix{2, 2} - rotation_matrix{1, 1} - rotation_matrix{3, 3}) * 2;
+        qw := ( rotation_matrix{1, 3} - rotation_matrix{3, 1} ) / S;
+        qx := ( rotation_matrix{1, 2} + rotation_matrix{2, 1} ) / S;
+        qy := 0.25*S;
+        qz := ( rotation_matrix{2, 3} + rotation_matrix{3, 2} ) / S;
+        
+    ELSE
+        S := Sqrt(1 + rotation_matrix{3, 3} - rotation_matrix{2, 2} - rotation_matrix{1, 1}) * 2;
+        qw := ( rotation_matrix{2, 1} - rotation_matrix{1, 2} ) / S;
+        qx :=( rotation_matrix{1, 3} + rotation_matrix{3, 1} ) / S;
+        qy := ( rotation_matrix{2, 3} + rotation_matrix{3, 2} ) / S;
+        qz := 0.25*S;
+    
+    ENDIF
+    
+    numQuart := [qw, qx, qy, qz];
+    LinalgNorm numQuart,numQuart;
+    
+    RETURN GenerNumVectorToOrient(numQuart);
+
+        
+    
+ENDFUNC
+    
+    
+
+
+!orient is datatype, startRT.rot returns a vector{4} of datatype orient
+FUNC orient GenerNumVectorToOrient(num vector{*})
+    VAR orient quart;
+    quart := [vector{1}, vector{2},vector{3},vector{4}];
+    RETURN quart;    
+ENDFUNC
+
+PROC GenerOrientToNumVector(orient quart, INOUT num vector{*})
+    
+    vector{1} := quart.q1;
+    vector{2} := quart.q2;
+    vector{3} := quart.q3;
+    vector{4} := quart.q4;
+
+ENDPROC
+
+!pos is the datatype start_RT returns a vector{4} of datatype pos
+FUNC pos GenerNumVectorToPos(num vector{*})
+    VAR pos position;
+    position := [vector{1},vector{2},vector{3}];
+    RETURN position;    
+ENDFUNC
+
+PROC GenerPosToNumVector(pos pos_vector, INOUT num vector{*})
+    
+    vector{1} := pos_vector.x;
+    vector{2} := pos_vector.y;
+    vector{3} := pos_vector.z;
+    
+ENDPROC
+
+ENDMODULE

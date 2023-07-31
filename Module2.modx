@@ -1,0 +1,198 @@
+MODULE Module2
+
+!Tool-data and Wobj-data
+PERS tooldata tLongLaser;
+!PERS tooldata tLongLaser;
+PERS tooldata tMidLaser;
+PERS tooldata tShortLaser;
+PERS wobjdata wBaseHE; 
+
+!GetValues() variables
+!VAR num counter := 0;
+
+    ! Dataframes for staring measurment and coordinate data.
+    
+        !! Genreal
+        PERS num dataValuesWM{50,5};
+        !! Upper
+        PERS num dataValuesVASUpper{600,5};
+        PERS num dataValuesVSWRUpper{400,5};
+        PERS num dataValuesVSWLUpper{400,5};
+        
+        !! Lower
+        PERS num dataValuesVASLower{600,5};
+        PERS num dataValuesVSWRLower{400,5};
+        PERS num dataValuesVSWLLower{400,5};
+
+ ! Dataframes for staring measurment and coordinate data.
+PERS string whichProc;
+PERS bool sentAllSensorValues := TRUE;
+PERS bool waiting := FALSE;
+PERS bool startSendingValues := TRUE;
+PERS bool communicationOn := TRUE;
+PERS bool doneUpdating := FALSE;
+
+! CONST
+CONST num goldenRatio := 1.61803;
+
+PROC main()
+    whichProc := "";
+    communicationOn := TRUE;
+    startSendingValues := FALSE;
+    WHILE TRUE DO
+        SendingDataPosDistance;
+    ENDWHILE
+
+ENDPROC
+
+PROC SendingDataPosDistance()
+    VAR num counter:= 1;
+    VAR num currDistance;
+    VAR num smallestDistance;
+    
+    WaitUntil startSendingValues = TRUE;
+    IF communicationOn = FALSE THEN
+        TPWrite("TURNING OFF");
+        EXIT;
+    ELSE
+        waiting := FALSE;
+    
+        !Send values if waiting is false
+        WHILE waiting = FALSE DO
+            WaitTime 0.005; !!Sample time == 10 ms
+            ! Sending position of the robot and the distance
+            GetValues counter;
+            
+        ENDWHILE  
+        EndValues counter;
+        
+    ENDIF
+ENDPROC
+
+PROC EndValues(num counter)
+    CONST num goldenRatio := 1.61803;
+    counter := counter -10;
+
+    IF whichProc = "VASUpper" THEN
+       
+        dataValuesVASUpper{counter,1} := goldenRatio;
+        dataValuesVASUpper{counter,2} := goldenRatio;
+        dataValuesVASUpper{counter,3} := goldenRatio;
+        dataValuesVASUpper{counter,4} := goldenRatio;
+        dataValuesVASUpper{counter,5} := goldenRatio;
+        
+    ELSEIF whichProc = "VASLower" THEN
+        
+        dataValuesVASLower{counter,1} := goldenRatio;
+        dataValuesVASLower{counter,2} := goldenRatio;
+        dataValuesVASLower{counter,3} := goldenRatio;
+        dataValuesVASLower{counter,4} := goldenRatio;
+        dataValuesVASLower{counter,5} := goldenRatio;
+
+    ELSEIF whichProc = "VSWRUpper" THEN
+        
+        dataValuesVSWRUpper{counter,1} := goldenRatio;
+        dataValuesVSWRUpper{counter,2} := goldenRatio;
+        dataValuesVSWRUpper{counter,3} := goldenRatio;
+        dataValuesVSWRUpper{counter,4} := goldenRatio;
+        dataValuesVSWRUpper{counter,5} := goldenRatio;
+    
+    ELSEIF whichProc = "VSWLUpper" THEN
+        
+        dataValuesVSWLUpper{counter,1} := goldenRatio;
+        dataValuesVSWLUpper{counter,2} := goldenRatio;
+        dataValuesVSWLUpper{counter,3} := goldenRatio;
+        dataValuesVSWLUpper{counter,4} := goldenRatio;
+        dataValuesVSWLUpper{counter,5} := goldenRatio;
+        
+     ELSEIF whichProc = "VSWRLower" THEN
+        
+        dataValuesVSWRLower{counter,1} := goldenRatio;
+        dataValuesVSWRLower{counter,2} := goldenRatio;
+        dataValuesVSWRLower{counter,3} := goldenRatio;
+        dataValuesVSWRLower{counter,4} := goldenRatio;
+        dataValuesVSWRLower{counter,5} := goldenRatio;
+    
+    ELSEIF whichProc = "VSWLLower" THEN
+        
+        dataValuesVSWLLower{counter,1} := goldenRatio;
+        dataValuesVSWLLower{counter,2} := goldenRatio;
+        dataValuesVSWLLower{counter,3} := goldenRatio;
+        dataValuesVSWLLower{counter,4} := goldenRatio;
+        dataValuesVSWLLower{counter,5} := goldenRatio;
+        
+    ENDIF
+    doneUpdating := TRUE;
+ENDPROC 
+
+PROC GetValues(INOUT num counter)
+    VAR num distance;
+    VAR pos position;
+    MeasurePosAndDist distance,position;
+
+    IF whichProc = "VASUpper" AND counter <= Dim(dataValuesVASUpper,1) THEN
+       
+        dataValuesVASUpper{counter,1} := distance;
+        dataValuesVASUpper{counter,2} := position.x;
+        dataValuesVASUpper{counter,3} := position.y;
+        dataValuesVASUpper{counter,4} := position.z;
+        counter := counter + 1;
+    
+    ELSEIF whichProc = "VASLower" AND counter <= Dim(dataValuesVASLower,1) THEN
+       
+        dataValuesVASLower{counter,1} := distance;
+        dataValuesVASLower{counter,2} := position.x;
+        dataValuesVASLower{counter,3} := position.y;
+        dataValuesVASLower{counter,4} := position.z;
+        counter := counter + 1;
+
+    ELSEIF whichProc = "VSWRUpper" AND counter <= Dim(dataValuesVSWRUpper,1) THEN
+        
+        dataValuesVSWRUpper{counter,1} := distance;
+        dataValuesVSWRUpper{counter,2} := position.x;
+        dataValuesVSWRUpper{counter,3} := position.y;
+        dataValuesVSWRUpper{counter,4} := position.z;
+        counter := counter + 1;
+    
+    ELSEIF whichProc = "VSWLUpper" AND counter <= Dim(dataValuesVSWLUpper,1) THEN
+        
+        dataValuesVSWLUpper{counter,1} := distance;
+        dataValuesVSWLUpper{counter,2} := position.x;
+        dataValuesVSWLUpper{counter,3} := position.y;
+        dataValuesVSWLUpper{counter,4} := position.z;
+        counter := counter + 1;
+        
+    ELSEIF whichProc = "VSWRLower" AND counter <= Dim(dataValuesVSWRLower,1) THEN
+        
+        dataValuesVSWRLower{counter,1} := distance;
+        dataValuesVSWRLower{counter,2} := position.x;
+        dataValuesVSWRLower{counter,3} := position.y;
+        dataValuesVSWRLower{counter,4} := position.z;
+        counter := counter + 1;
+    
+    ELSEIF whichProc = "VSWLLower" AND counter <= Dim(dataValuesVSWLLower,1) THEN
+        
+        dataValuesVSWLLower{counter,1} := distance;
+        dataValuesVSWLLower{counter,2} := position.x;
+        dataValuesVSWLLower{counter,3} := position.y;
+        dataValuesVSWLLower{counter,4} := position.z;
+        counter := counter + 1;
+        
+    ELSEIF whichProc = "WM" AND counter <= Dim(dataValuesWM,1) THEN
+        
+        dataValuesWM{counter,1} := distance;
+        dataValuesWM{counter,2} := position.x;
+        dataValuesWM{counter,3} := position.y;
+        dataValuesWM{counter,4} := position.z;
+        counter := counter + 1;
+        
+    ENDIF
+
+ENDPROC 
+
+PROC MeasurePosAndDist(INOUT num distance,INOUT pos position)
+    distance := GInput(giDistOMH3)/10;
+    position := CPos(\Tool:=tLongLaser\WObj:=wBaseHE);
+ENDPROC
+
+ENDMODULE
